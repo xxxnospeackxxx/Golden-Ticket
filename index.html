@@ -24,7 +24,6 @@
 </div>
 
 <script>
-  // --- COLOCA AQUI AS TUAS CHAVES DO SUPABASE ---
   const SUPABASE_URL = 'https://nkuywnsjredskfnypice.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_HQERWAaofXvB8m2mIV4DBQ_AR2J5nEc';
   const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -37,7 +36,6 @@
     'Vous avez gagné un cadeau de la boutique 🛍️'
   ];
 
-  // --- Pega o token do link ---
   const token = new URLSearchParams(window.location.search).get('token');
   if (!token) document.body.innerHTML = 'Lien invalide';
 
@@ -52,28 +50,18 @@
 
   document.getElementById('start').onclick = async () => {
     const nick = document.getElementById('nickname').value.trim();
-    if (!nick.startsWith('@')) {
-      alert('Pseudo Telegram invalide');
-      return;
-    }
-
-    if (await tokenUsed()) {
-      alert('Ce lien a déjà été utilisé ❌');
-      return;
-    }
-
+    if (!nick.startsWith('@')) { alert('Pseudo Telegram invalide'); return; }
+    if (await tokenUsed()) { alert('Ce lien a déjà été utilisé ❌'); return; }
     document.getElementById('scratch').style.display = 'block';
   };
 
   document.getElementById('scratch').onclick = async () => {
     const prize = prizes[Math.floor(Math.random() * prizes.length)];
-
     await supabase.from('participacoes').insert({
       token: token,
       nickname: document.getElementById('nickname').value,
       premio: prize
     });
-
     document.getElementById('result').innerText = prize;
     document.getElementById('scratch').style.display = 'none';
   };
