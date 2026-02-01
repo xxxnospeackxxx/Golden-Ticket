@@ -7,264 +7,300 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:url("assets/background.jpg") no-repeat center center fixed;
-  background-size:contain;
-  background-color:#000;
-  color:#fff;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:20px;
-}
+  :root{
+    --wheel-size: 360px;   /* 👈 roda maior */
+    --label-radius: 118px; /* 👈 posição dos ícones (centro de cada fatia) */
+  }
 
-.card{
-  background:rgba(0,0,0,.75);
-  padding:20px;
-  border-radius:22px;
-  width:min(420px,95vw);
-  text-align:center;
-  box-shadow:0 20px 60px rgba(0,0,0,.6);
-}
+  body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:url("assets/background.jpg") no-repeat center center fixed;
+    background-size:contain;
+    background-color:#000;
+    color:#fff;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:18px;
+  }
 
-h1{margin:6px 0 8px;}
-p{margin:0 0 10px;}
+  .card{
+    background:rgba(0,0,0,.68);
+    padding:14px 14px 16px;
+    border-radius:22px;
+    width:min(520px, 95vw);
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);
+    backdrop-filter: blur(6px);
+  }
 
-input,button{
-  width:100%;
-  padding:12px;
-  margin-top:12px;
-  border-radius:12px;
-  font-size:16px;
-  border:none;
-}
+  h1{
+    margin:6px 0 6px;
+    font-size:24px; /* 👈 título um pouco menor */
+    letter-spacing:.2px;
+  }
 
-button{
-  background:gold;
-  font-weight:800;
-  cursor:pointer;
-}
-button:disabled{opacity:.6; cursor:not-allowed;}
+  .top-controls{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin: 6px auto 6px;
+  }
 
-.wheel-wrap{
-  margin:20px auto;
-  width:260px;
-  height:260px;
-  position:relative;
-  display:none;
-}
+  input{
+    width:min(260px, 80vw); /* 👈 caixa menor */
+    padding:10px 12px;
+    border-radius:12px;
+    font-size:15px;
+    border:none;
+    outline:none;
+  }
 
-/* 🔽 PONTEIRO CORRIGIDO (aponta para baixo) */
-.pointer{
-  position:absolute;
-  top:-6px;
-  left:50%;
-  transform:translateX(-50%);
-  width:0;
-  height:0;
-  border-left:14px solid transparent;
-  border-right:14px solid transparent;
-  border-top:26px solid gold;
-  z-index:5;
-}
+  button{
+    padding:10px 14px;
+    border-radius:12px;
+    font-size:15px;
+    border:none;
+    background:gold;
+    font-weight:800;
+    cursor:pointer;
+    min-width:120px; /* 👈 botão menor */
+  }
+  button:disabled{opacity:.6; cursor:not-allowed;}
 
-#wheel{
-  position:relative;
-  width:100%;
-  height:100%;
-  border-radius:50%;
-  border:10px solid #fff;
-  box-shadow:inset 0 0 0 6px rgba(0,0,0,.25),0 18px 45px rgba(0,0,0,.55);
-  transform:rotate(0deg);
+  .wheel-wrap{
+    margin:12px auto 6px;
+    width:var(--wheel-size);
+    height:var(--wheel-size);
+    position:relative;
+    display:none;
+  }
 
-  /* Fatias intercaladas: perde / ganha */
-  background:conic-gradient(
-    #c0392b 0deg 36deg,
-    #2ecc71 36deg 72deg,
-    #e74c3c 72deg 108deg,
-    #27ae60 108deg 144deg,
-    #c0392b 144deg 180deg,
-    #f1c40f 180deg 216deg,
-    #e74c3c 216deg 252deg,
-    #f39c12 252deg 288deg,
-    #c0392b 288deg 324deg,
-    #9b59b6 324deg 360deg
-  );
-}
+  /* 🔽 ponteiro aponta para baixo */
+  .pointer{
+    position:absolute;
+    top:-6px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0;height:0;
+    border-left:16px solid transparent;
+    border-right:16px solid transparent;
+    border-top:30px solid gold;
+    z-index:5;
+    filter: drop-shadow(0 8px 10px rgba(0,0,0,.6));
+  }
 
-.labels{
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  pointer-events:none;
-}
+  #wheel{
+    position:relative;
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    border:10px solid rgba(255,255,255,.92);
+    box-shadow:inset 0 0 0 6px rgba(0,0,0,.22),0 18px 45px rgba(0,0,0,.55);
+    transform:rotate(0deg);
 
-.slice-label{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:
-    rotate(var(--a))
-    translateY(-95px)
-    rotate(calc(-1 * var(--a)));
-  transform-origin:0 0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:4px;
-  font-size:20px;
-  text-shadow:0 2px 6px rgba(0,0,0,.7);
-}
+    /* 10 fatias intercaladas: perde / ganha */
+    background:conic-gradient(
+      #c0392b 0deg 36deg,
+      #2ecc71 36deg 72deg,
+      #e74c3c 72deg 108deg,
+      #27ae60 108deg 144deg,
+      #c0392b 144deg 180deg,
+      #f1c40f 180deg 216deg,
+      #e74c3c 216deg 252deg,
+      #f39c12 252deg 288deg,
+      #c0392b 288deg 324deg,
+      #9b59b6 324deg 360deg
+    );
+  }
 
-.slice-label span{
-  font-size:11px;
-  font-weight:800;
-  background:rgba(0,0,0,.4);
-  padding:3px 6px;
-  border-radius:999px;
-}
+  .labels{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    pointer-events:none;
+  }
 
-#result{
-  margin-top:14px;
-  font-size:18px;
-  font-weight:800;
-  min-height:28px;
-}
+  /* ✅ Ícones centrados no raio desejado */
+  .slice-icon{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:
+      translate(-50%,-50%)
+      rotate(var(--a))
+      translateY(calc(-1 * var(--label-radius)))
+      rotate(calc(-1 * var(--a)));
+    font-size:28px;          /* 👈 ícones maiores */
+    line-height:1;
+    text-shadow:0 2px 8px rgba(0,0,0,.75);
+    user-select:none;
+  }
+
+  #result{
+    margin-top:10px;
+    font-size:18px;
+    font-weight:900;
+    min-height:28px;
+    text-shadow:0 2px 10px rgba(0,0,0,.75);
+  }
+
+  .hint{
+    margin-top:6px;
+    font-size:12px;
+    opacity:.85;
+  }
+
+  /* Melhor em telas pequenas */
+  @media (max-width:420px){
+    :root{ --wheel-size: 320px; --label-radius: 105px; }
+    .slice-icon{ font-size:26px; }
+  }
 </style>
 </head>
 
 <body>
 <div class="card">
   <h1>🎡 Golden Ticket</h1>
-  <p>Pseudo Telegram</p>
 
-  <input id="nickname" placeholder="@pseudoTelegram">
-  <button id="start">Participer</button>
+  <div class="top-controls">
+    <input id="nickname" placeholder="@pseudoTelegram">
+    <button id="start">Participer</button>
+  </div>
 
   <div id="wheelWrap" class="wheel-wrap">
     <div class="pointer"></div>
     <div id="wheel">
       <div class="labels">
         <!-- Centros: 18,54,90,126,162,198,234,270,306,342 -->
-        <div class="slice-label" style="--a:18deg;">😭<span>Perdu</span></div>
-        <div class="slice-label" style="--a:54deg;">🎁<span>10%</span></div>
-        <div class="slice-label" style="--a:90deg;">😢<span>Perdu</span></div>
-        <div class="slice-label" style="--a:126deg;">🎁<span>15%</span></div>
-        <div class="slice-label" style="--a:162deg;">😞<span>Réessaie</span></div>
-        <div class="slice-label" style="--a:198deg;">💶<span>20€</span></div>
-        <div class="slice-label" style="--a:234deg;">😔<span>Dommage</span></div>
-        <div class="slice-label" style="--a:270deg;">💶<span>50€</span></div>
-        <div class="slice-label" style="--a:306deg;">🥲<span>Encore</span></div>
-        <div class="slice-label" style="--a:342deg;">🛍️<span>Cadeau</span></div>
+        <!-- PERDE -->
+        <div class="slice-icon" style="--a:18deg;">😭</div>
+        <div class="slice-icon" style="--a:90deg;">😢</div>
+        <div class="slice-icon" style="--a:162deg;">😞</div>
+        <div class="slice-icon" style="--a:234deg;">😔</div>
+        <div class="slice-icon" style="--a:306deg;">🥲</div>
+
+        <!-- GANHA -->
+        <div class="slice-icon" style="--a:54deg;">🎁</div>
+        <div class="slice-icon" style="--a:126deg;">🎁</div>
+        <div class="slice-icon" style="--a:198deg;">💶</div>
+        <div class="slice-icon" style="--a:270deg;">💶</div>
+        <div class="slice-icon" style="--a:342deg;">🛍️</div>
       </div>
     </div>
   </div>
 
   <div id="result"></div>
+  <div class="hint">Une participation par lien (ticket).</div>
+
   <audio id="spinSound" src="assets/spin.mp3" preload="auto"></audio>
 </div>
 
 <script>
-const SUPABASE_URL='https://nkuywnsjredskfnypice.supabase.co';
-const SUPABASE_KEY='sb_publishable_HQERWAaofXvB8m2mIV4DBQ_AR2J5nEc';
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  const SUPABASE_URL='https://nkuywnsjredskfnypice.supabase.co';
+  const SUPABASE_KEY='sb_publishable_HQERWAaofXvB8m2mIV4DBQ_AR2J5nEc';
+  const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const loseMessages=[
-  "Perdu 😢… tente ta chance une prochaine fois !",
-  "Pas de chance cette fois 😔. Reviens tenter ta chance bientôt !",
-  "Perdu… 🍀 La chance tourne, réessaie plus tard !",
-  "Dommage ! 😕 Achète encore et tente ta chance à nouveau !",
-  "Pas gagnant cette fois ❌. La prochaine sera peut-être la bonne !"
-];
+  const loseMessages=[
+    "Perdu 😢… tente ta chance une prochaine fois !",
+    "Pas de chance cette fois 😔. Reviens tenter ta chance bientôt !",
+    "Perdu… 🍀 La chance tourne, réessaie plus tard !",
+    "Dommage ! 😕 Achète encore et tente ta chance à nouveau !",
+    "Pas gagnant cette fois ❌. La prochaine sera peut-être la bonne !"
+  ];
 
-const LOSE_SLICES=[18,90,162,234,306];
-const WIN_SLICES=[
-  {angle:54,text:"Vous avez gagné 10% 🎁"},
-  {angle:126,text:"Vous avez gagné 15% 🎁"},
-  {angle:198,text:"Vous avez gagné 20€ 💶"},
-  {angle:270,text:"Vous avez gagné 50€ 💶"},
-  {angle:342,text:"Vous avez gagné un cadeau de la boutique 🛍️"}
-];
+  // Fatias intercaladas
+  const LOSE_SLICES=[18,90,162,234,306];
+  const WIN_SLICES=[
+    {angle:54,  text:"Vous avez gagné 10% 🎁"},
+    {angle:126, text:"Vous avez gagné 15% 🎁"},
+    {angle:198, text:"Vous avez gagné 20€ 💶"},
+    {angle:270, text:"Vous avez gagné 50€ 💶"},
+    {angle:342, text:"Vous avez gagné un cadeau de la boutique 🛍️"}
+  ];
 
-const token=new URLSearchParams(window.location.search).get('token');
-if(!token) document.body.innerHTML="<h2 style='color:white'>Lien invalide ❌</h2>";
+  const token=new URLSearchParams(window.location.search).get('token');
+  if(!token) document.body.innerHTML="<h2 style='color:white;font-family:Arial'>Lien invalide ❌</h2>";
 
-const startBtn=document.getElementById('start');
-const wheelWrap=document.getElementById('wheelWrap');
-const wheel=document.getElementById('wheel');
-const resultEl=document.getElementById('result');
-const spinSound=document.getElementById('spinSound');
+  const startBtn=document.getElementById('start');
+  const wheelWrap=document.getElementById('wheelWrap');
+  const wheel=document.getElementById('wheel');
+  const resultEl=document.getElementById('result');
+  const spinSound=document.getElementById('spinSound');
 
-async function tokenUsed(){
-  const {data}=await supabaseClient
-    .from('participacoes')
-    .select('id')
-    .eq('token',token)
-    .maybeSingle();
-  return !!data;
-}
-
-function rotationToLandOn(target){
-  const jitter=(Math.random()*20)-10;
-  return 360-target+jitter;
-}
-
-startBtn.onclick=async()=>{
-  const nick=document.getElementById('nickname').value.trim();
-  if(!nick.startsWith('@')) return alert("Pseudo Telegram invalide");
-
-  startBtn.disabled=true;
-  resultEl.textContent="";
-
-  if(await tokenUsed()){
-    alert("Ce lien a déjà été utilisé ❌");
-    startBtn.disabled=false;
-    return;
+  async function tokenUsed(){
+    const {data}=await supabaseClient
+      .from('participacoes')
+      .select('id')
+      .eq('token',token)
+      .maybeSingle();
+    return !!data;
   }
 
-  wheelWrap.style.display='block';
-
-  const isWin=Math.random()>=0.5;
-  let angle,finalText;
-
-  if(isWin){
-    const s=WIN_SLICES[Math.floor(Math.random()*WIN_SLICES.length)];
-    angle=s.angle;
-    finalText=s.text;
-  }else{
-    angle=LOSE_SLICES[Math.floor(Math.random()*LOSE_SLICES.length)];
-    finalText=loseMessages[Math.floor(Math.random()*loseMessages.length)];
+  function rotationToLandOn(target){
+    const jitter=(Math.random()*20)-10; // mantém dentro da fatia
+    return 360-target+jitter;
   }
 
-  const spins=8+Math.random()*2;
-  const finalRotation=spins*360+rotationToLandOn(angle);
+  startBtn.onclick=async()=>{
+    const nick=document.getElementById('nickname').value.trim();
+    if(!nick.startsWith('@')) return alert("Pseudo Telegram invalide");
 
-  wheel.style.transition='none';
-  wheel.style.transform='rotate(0deg)';
-  wheel.offsetHeight;
+    startBtn.disabled=true;
+    resultEl.textContent="";
 
-  wheel.style.transition='transform 7s cubic-bezier(.12,.67,.12,.99)';
-  wheel.style.transform=`rotate(${finalRotation}deg)`;
+    if(await tokenUsed()){
+      alert("Ce lien a déjà été utilisé ❌");
+      startBtn.disabled=false;
+      return;
+    }
 
-  spinSound.currentTime=0;
-  spinSound.loop=true;
-  spinSound.play().catch(()=>{});
+    wheelWrap.style.display='block';
 
-  setTimeout(async()=>{
-    spinSound.pause();
+    const isWin=Math.random()>=0.5; // 50/50
+    let angle,finalText;
+
+    if(isWin){
+      const s=WIN_SLICES[Math.floor(Math.random()*WIN_SLICES.length)];
+      angle=s.angle;
+      finalText=s.text;
+    }else{
+      angle=LOSE_SLICES[Math.floor(Math.random()*LOSE_SLICES.length)];
+      finalText=loseMessages[Math.floor(Math.random()*loseMessages.length)];
+    }
+
+    const spins=8+Math.random()*2; // sensação 6–8s
+    const finalRotation=spins*360+rotationToLandOn(angle);
+
+    // reset + animação
+    wheel.style.transition='none';
+    wheel.style.transform='rotate(0deg)';
+    wheel.offsetHeight;
+    wheel.style.transition='transform 7s cubic-bezier(.12,.67,.12,.99)';
+    wheel.style.transform=`rotate(${finalRotation}deg)`;
+
+    // som
     spinSound.currentTime=0;
-    resultEl.textContent=finalText;
+    spinSound.loop=true;
+    spinSound.play().catch(()=>{});
 
-    await supabaseClient.from('participacoes').insert({
-      token:token,
-      nickname:nick,
-      premio:finalText
-    });
-  },7200);
-};
+    setTimeout(async()=>{
+      spinSound.pause();
+      spinSound.currentTime=0;
+
+      resultEl.textContent=finalText;
+
+      await supabaseClient.from('participacoes').insert({
+        token:token,
+        nickname:nick,
+        premio:finalText
+      });
+    },7200);
+  };
 </script>
 </body>
 </html>
