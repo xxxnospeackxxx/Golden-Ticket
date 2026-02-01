@@ -47,6 +47,7 @@ button{
   font-weight:800;
   cursor:pointer;
 }
+button:disabled{opacity:.6; cursor:not-allowed;}
 
 .wheel-wrap{
   margin:20px auto;
@@ -144,14 +145,14 @@ button{
     <div class="pointer"></div>
     <div id="wheel">
       <div class="labels">
-        <!-- PERDAS -->
+        <!-- PERDAS (centros: 18,54,90,126,162) -->
         <div class="slice-label" style="--a:18deg;">😭<span>Perdu</span></div>
         <div class="slice-label" style="--a:54deg;">😢<span>Perdu</span></div>
         <div class="slice-label" style="--a:90deg;">😞<span>Réessaie</span></div>
         <div class="slice-label" style="--a:126deg;">😔<span>Dommage</span></div>
-        <div class="slice-label" style="--a:162deg;">🥲<span>Next</span></div>
+        <div class="slice-label" style="--a:162deg;">🥲<span>Encore</span></div>
 
-        <!-- GANHOS -->
+        <!-- GANHOS (centros: 198,234,270,306,342) -->
         <div class="slice-label" style="--a:198deg;">🎁<span>10%</span></div>
         <div class="slice-label" style="--a:234deg;">🎁<span>15%</span></div>
         <div class="slice-label" style="--a:270deg;">💶<span>20€</span></div>
@@ -171,20 +172,29 @@ const SUPABASE_URL='https://nkuywnsjredskfnypice.supabase.co';
 const SUPABASE_KEY='sb_publishable_HQERWAaofXvB8m2mIV4DBQ_AR2J5nEc';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const prizes=[
-  "Vous avez gagné 10% 🎁",
-  "Vous avez gagné 15% 🎁",
-  "Vous avez gagné 50€ 💶",
-  "Vous avez gagné 20€ 💶",
-  "Vous avez gagné un cadeau de la boutique 🛍️"
-];
-
 const loseMessages=[
   "Perdu 😢… tente ta chance une prochaine fois !",
   "Pas de chance cette fois 😔. Reviens tenter ta chance bientôt !",
   "Perdu… 🍀 La chance tourne, réessaie plus tard !",
   "Dommage ! 😕 Achète encore et tente ta chance à nouveau !",
   "Pas gagnant cette fois ❌. La prochaine sera peut-être la bonne !"
+];
+
+// 🔥 Fatias com ângulo-centro + texto correspondente (assim nunca falha)
+const LOSE_SLICES = [
+  { angle: 18 },
+  { angle: 54 },
+  { angle: 90 },
+  { angle: 126 },
+  { angle: 162 }
+];
+
+const WIN_SLICES = [
+  { angle: 198, text: "Vous avez gagné 10% 🎁" },
+  { angle: 234, text: "Vous avez gagné 15% 🎁" },
+  { angle: 270, text: "Vous avez gagné 20€ 💶" },
+  { angle: 306, text: "Vous avez gagné 50€ 💶" },
+  { angle: 342, text: "Vous avez gagné un cadeau de la boutique 🛍️" }
 ];
 
 const token=new URLSearchParams(window.location.search).get('token');
@@ -205,7 +215,15 @@ async function tokenUsed(){
   return !!data;
 }
 
-function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+// ⚙️ Para a roleta parar MESMO na fatia escolhida:
+// Se a roda roda +θ, um ângulo-alvo β vai para β+θ.
+// Para β ficar no ponteiro (0°), queremos θ ≡ 360-β (mod 360).
+function rotationToLandOn(targetAngleDeg){
+  const jitter = (Math.random() * 20) - 10; // -10..+10 (fica dentro da fatia)
+  return (360 - targetAngleDeg + jitter);
+}
 
 startBtn.onclick=async()=>{
   const nick=document.getElementById('nickname').value.trim();
@@ -222,16 +240,27 @@ startBtn.onclick=async()=>{
 
   wheelWrap.style.display='block';
 
-  const isWin=Math.random()>=0.5;
-  const finalText=isWin?pick(prizes):pick(loseMessages);
+  // ✅ 50/50 real
+  const isWin = Math.random() >= 0.5;
 
-  const stopAngle=isWin
-    ?180+Math.floor(Math.random()*180)
-    :Math.floor(Math.random()*180);
+  // ✅ Escolhe a FATIA primeiro (e o texto vem dela)
+  let chosenAngle, finalText;
 
-  const spins=8+Math.random()*2;
-  const finalRotation=spins*360+stopAngle;
+  if (isWin){
+    const slice = pick(WIN_SLICES);
+    chosenAngle = slice.angle;
+    finalText = slice.text;
+  } else {
+    const slice = pick(LOSE_SLICES);
+    chosenAngle = slice.angle;
+    finalText = pick(loseMessages);
+  }
 
+  // 6–8s sensação: usamos 8–10 voltas com transição de 7s
+  const spins = 8 + Math.random() * 2;
+  const finalRotation = spins * 360 + rotationToLandOn(chosenAngle);
+
+  // RESET + animação
   wheel.style.transition='none';
   wheel.style.transform='rotate(0deg)';
   wheel.offsetHeight;
@@ -239,6 +268,7 @@ startBtn.onclick=async()=>{
   wheel.style.transition='transform 7s cubic-bezier(.12,.67,.12,.99)';
   wheel.style.transform=`rotate(${finalRotation}deg)`;
 
+  // som
   spinSound.currentTime=0;
   spinSound.loop=true;
   spinSound.play().catch(()=>{});
@@ -246,6 +276,7 @@ startBtn.onclick=async()=>{
   setTimeout(async()=>{
     spinSound.pause();
     spinSound.currentTime=0;
+
     resultEl.textContent=finalText;
 
     await supabaseClient.from('participacoes').insert({
