@@ -1,218 +1,260 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Golden Ticket</title>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Golden Ticket</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-  <style>
-    body{
-      margin:0;
-      font-family: Arial, sans-serif;
-      background: url("assets/background.jpg") no-repeat center center fixed;
-      background-size: contain;     /* 👈 imagem inteira */
-      background-color:#000;        /* fundo preto */
-      color:#fff;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
+<style>
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:url("assets/background.jpg") no-repeat center center fixed;
+  background-size:contain;
+  background-color:#000;
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+}
 
-    .card{
-      width: min(420px, 92vw);
-      background: rgba(0,0,0,.75);
-      border-radius: 22px;
-      padding: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.55);
-      text-align:center;
-    }
+.card{
+  background:rgba(0,0,0,.75);
+  padding:20px;
+  border-radius:22px;
+  width:min(420px,95vw);
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
 
-    h1{ margin:6px 0 8px; font-size: 26px; }
-    p{ margin:0 0 10px; }
+h1{margin:6px 0 8px;}
+p{margin:0 0 10px;}
 
-    input, button{
-      width:100%;
-      padding:12px;
-      margin-top:12px;
-      border-radius: 12px;
-      font-size: 16px;
-      border: none;
-      outline: none;
-    }
+input,button{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border-radius:12px;
+  font-size:16px;
+  border:none;
+}
 
-    input{ background:#fff; }
-    button{
-      background: gold;
-      color:#111;
-      font-weight: 800;
-      cursor:pointer;
-    }
-    button:disabled{ opacity:.6; cursor:not-allowed; }
+button{
+  background:gold;
+  font-weight:800;
+  cursor:pointer;
+}
 
-    .wheel-wrap{
-      margin: 18px auto 6px;
-      width: 260px;
-      height: 260px;
-      position: relative;
-      display:none;
-    }
+.wheel-wrap{
+  margin:20px auto;
+  width:260px;
+  height:260px;
+  position:relative;
+  display:none;
+}
 
-    .pointer{
-      position:absolute;
-      top:-10px;
-      left:50%;
-      transform: translateX(-50%);
-      width:0;height:0;
-      border-left:14px solid transparent;
-      border-right:14px solid transparent;
-      border-bottom:26px solid gold;
-      z-index:5;
-    }
+.pointer{
+  position:absolute;
+  top:-10px;
+  left:50%;
+  transform:translateX(-50%);
+  width:0;height:0;
+  border-left:14px solid transparent;
+  border-right:14px solid transparent;
+  border-bottom:26px solid gold;
+  z-index:5;
+}
 
-    #wheel{
-      width:100%;
-      height:100%;
-      border-radius:50%;
-      border: 10px solid #fff;
-      box-shadow: inset 0 0 0 6px rgba(0,0,0,.25), 0 18px 45px rgba(0,0,0,.55);
-      transform: rotate(0deg);
-      background: conic-gradient(
-        #c0392b 0deg 36deg,
-        #e74c3c 36deg 72deg,
-        #c0392b 72deg 108deg,
-        #e74c3c 108deg 144deg,
-        #c0392b 144deg 180deg,
+#wheel{
+  position:relative;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  border:10px solid #fff;
+  box-shadow:inset 0 0 0 6px rgba(0,0,0,.25),0 18px 45px rgba(0,0,0,.55);
+  transform:rotate(0deg);
+  background:conic-gradient(
+    #c0392b 0deg 36deg,
+    #e74c3c 36deg 72deg,
+    #c0392b 72deg 108deg,
+    #e74c3c 108deg 144deg,
+    #c0392b 144deg 180deg,
 
-        #2ecc71 180deg 216deg,
-        #27ae60 216deg 252deg,
-        #f1c40f 252deg 288deg,
-        #f39c12 288deg 324deg,
-        #9b59b6 324deg 360deg
-      );
-    }
+    #2ecc71 180deg 216deg,
+    #27ae60 216deg 252deg,
+    #f1c40f 252deg 288deg,
+    #f39c12 288deg 324deg,
+    #9b59b6 324deg 360deg
+  );
+}
 
-    #result{
-      margin-top: 14px;
-      font-size: 18px;
-      font-weight: 800;
-      min-height: 28px;
-    }
-  </style>
+.labels{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  pointer-events:none;
+}
+
+.slice-label{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:
+    rotate(var(--a))
+    translateY(-95px)
+    rotate(calc(-1 * var(--a)));
+  transform-origin:0 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  font-size:20px;
+  text-shadow:0 2px 6px rgba(0,0,0,.7);
+}
+
+.slice-label span{
+  font-size:11px;
+  font-weight:800;
+  background:rgba(0,0,0,.4);
+  padding:3px 6px;
+  border-radius:999px;
+}
+
+#result{
+  margin-top:14px;
+  font-size:18px;
+  font-weight:800;
+  min-height:28px;
+}
+</style>
 </head>
 
 <body>
-  <div class="card">
-    <h1>🎡 Golden Ticket</h1>
-    <p>Identifiez-vous avec votre pseudo Telegram</p>
+<div class="card">
+  <h1>🎡 Golden Ticket</h1>
+  <p>Pseudo Telegram</p>
 
-    <input id="nickname" placeholder="@pseudoTelegram" />
-    <button id="start">Participer</button>
+  <input id="nickname" placeholder="@pseudoTelegram">
+  <button id="start">Participer</button>
 
-    <div id="wheelWrap" class="wheel-wrap">
-      <div class="pointer"></div>
-      <div id="wheel"></div>
+  <div id="wheelWrap" class="wheel-wrap">
+    <div class="pointer"></div>
+    <div id="wheel">
+      <div class="labels">
+        <!-- PERDAS -->
+        <div class="slice-label" style="--a:18deg;">😭<span>Perdu</span></div>
+        <div class="slice-label" style="--a:54deg;">😢<span>Perdu</span></div>
+        <div class="slice-label" style="--a:90deg;">😞<span>Réessaie</span></div>
+        <div class="slice-label" style="--a:126deg;">😔<span>Dommage</span></div>
+        <div class="slice-label" style="--a:162deg;">🥲<span>Next</span></div>
+
+        <!-- GANHOS -->
+        <div class="slice-label" style="--a:198deg;">🎁<span>10%</span></div>
+        <div class="slice-label" style="--a:234deg;">🎁<span>15%</span></div>
+        <div class="slice-label" style="--a:270deg;">💶<span>20€</span></div>
+        <div class="slice-label" style="--a:306deg;">💶<span>50€</span></div>
+        <div class="slice-label" style="--a:342deg;">🛍️<span>Cadeau</span></div>
+      </div>
     </div>
-
-    <div id="result"></div>
-
-    <audio id="spinSound" src="assets/spin.mp3" preload="auto"></audio>
   </div>
 
+  <div id="result"></div>
+
+  <audio id="spinSound" src="assets/spin.mp3" preload="auto"></audio>
+</div>
+
 <script>
-  // 🔐 Supabase
-  const SUPABASE_URL = 'https://nkuywnsjredskfnypice.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_HQERWAaofXvB8m2mIV4DBQ_AR2J5nEc';
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL='https://nkuywnsjredskfnypice.supabase.co';
+const SUPABASE_KEY='sb_publishable_HQERWAaofXvB8m2mIV4DBQ_AR2J5nEc';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-  const prizes = [
-    "Vous avez gagné 10% 🎁",
-    "Vous avez gagné 15% 🎁",
-    "Vous avez gagné 50€ 💶",
-    "Vous avez gagné 20€ 💶",
-    "Vous avez gagné un cadeau de la boutique 🛍️"
-  ];
+const prizes=[
+  "Vous avez gagné 10% 🎁",
+  "Vous avez gagné 15% 🎁",
+  "Vous avez gagné 50€ 💶",
+  "Vous avez gagné 20€ 💶",
+  "Vous avez gagné un cadeau de la boutique 🛍️"
+];
 
-  const loseMessages = [
-    "Perdu 😢… tente ta chance une prochaine fois !",
-    "Pas de chance cette fois 😔. Reviens tenter ta chance bientôt !",
-    "Perdu… 🍀 La chance tourne, réessaie plus tard !",
-    "Dommage ! 😕 Achète encore et tente ta chance à nouveau !",
-    "Pas gagnant cette fois ❌. La prochaine sera peut-être la bonne !"
-  ];
+const loseMessages=[
+  "Perdu 😢… tente ta chance une prochaine fois !",
+  "Pas de chance cette fois 😔. Reviens tenter ta chance bientôt !",
+  "Perdu… 🍀 La chance tourne, réessaie plus tard !",
+  "Dommage ! 😕 Achète encore et tente ta chance à nouveau !",
+  "Pas gagnant cette fois ❌. La prochaine sera peut-être la bonne !"
+];
 
-  const token = new URLSearchParams(window.location.search).get('token');
-  if (!token) document.body.innerHTML = "<h2 style='color:white'>Lien invalide ❌</h2>";
+const token=new URLSearchParams(window.location.search).get('token');
+if(!token) document.body.innerHTML="<h2 style='color:white'>Lien invalide ❌</h2>";
 
-  const startBtn = document.getElementById('start');
-  const wheelWrap = document.getElementById('wheelWrap');
-  const wheel = document.getElementById('wheel');
-  const resultEl = document.getElementById('result');
-  const spinSound = document.getElementById('spinSound');
+const startBtn=document.getElementById('start');
+const wheelWrap=document.getElementById('wheelWrap');
+const wheel=document.getElementById('wheel');
+const resultEl=document.getElementById('result');
+const spinSound=document.getElementById('spinSound');
 
-  async function tokenUsed(){
-    const { data } = await supabaseClient
-      .from('participacoes')
-      .select('id')
-      .eq('token', token)
-      .maybeSingle();
-    return !!data;
+async function tokenUsed(){
+  const {data}=await supabaseClient
+    .from('participacoes')
+    .select('id')
+    .eq('token',token)
+    .maybeSingle();
+  return !!data;
+}
+
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+startBtn.onclick=async()=>{
+  const nick=document.getElementById('nickname').value.trim();
+  if(!nick.startsWith('@')) return alert("Pseudo Telegram invalide");
+
+  startBtn.disabled=true;
+  resultEl.textContent="";
+
+  if(await tokenUsed()){
+    alert("Ce lien a déjà été utilisé ❌");
+    startBtn.disabled=false;
+    return;
   }
 
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  wheelWrap.style.display='block';
 
-  startBtn.onclick = async () => {
-    const nick = document.getElementById('nickname').value.trim();
-    if (!nick.startsWith('@')) return alert("Pseudo Telegram invalide");
+  const isWin=Math.random()>=0.5;
+  const finalText=isWin?pick(prizes):pick(loseMessages);
 
-    startBtn.disabled = true;
-    resultEl.textContent = "";
+  const stopAngle=isWin
+    ?180+Math.floor(Math.random()*180)
+    :Math.floor(Math.random()*180);
 
-    if (await tokenUsed()) {
-      alert("Ce lien a déjà été utilisé ❌");
-      startBtn.disabled = false;
-      return;
-    }
+  const spins=8+Math.random()*2;
+  const finalRotation=spins*360+stopAngle;
 
-    wheelWrap.style.display = 'block';
+  wheel.style.transition='none';
+  wheel.style.transform='rotate(0deg)';
+  wheel.offsetHeight;
 
-    const isWin = Math.random() >= 0.5;
-    const finalText = isWin ? pick(prizes) : pick(loseMessages);
+  wheel.style.transition='transform 7s cubic-bezier(.12,.67,.12,.99)';
+  wheel.style.transform=`rotate(${finalRotation}deg)`;
 
-    const stopAngle = isWin
-      ? 180 + Math.floor(Math.random() * 180)
-      : Math.floor(Math.random() * 180);
+  spinSound.currentTime=0;
+  spinSound.loop=true;
+  spinSound.play().catch(()=>{});
 
-    const spins = 8 + Math.random() * 2;
-    const finalRotation = spins * 360 + stopAngle;
+  setTimeout(async()=>{
+    spinSound.pause();
+    spinSound.currentTime=0;
+    resultEl.textContent=finalText;
 
-    /* 🔄 RESET + ANIMAÇÃO (correção principal) */
-    wheel.style.transition = 'none';
-    wheel.style.transform = 'rotate(0deg)';
-    wheel.offsetHeight;
-
-    wheel.style.transition = 'transform 7s cubic-bezier(.12,.67,.12,.99)';
-    wheel.style.transform = `rotate(${finalRotation}deg)`;
-
-    spinSound.currentTime = 0;
-    spinSound.loop = true;
-    spinSound.play().catch(()=>{});
-
-    setTimeout(async () => {
-      spinSound.pause();
-      spinSound.currentTime = 0;
-
-      resultEl.textContent = finalText;
-
-      await supabaseClient.from('participacoes').insert({
-        token: token,
-        nickname: nick,
-        premio: finalText
-      });
-    }, 7200);
-  };
+    await supabaseClient.from('participacoes').insert({
+      token:token,
+      nickname:nick,
+      premio:finalText
+    });
+  },7200);
+};
 </script>
 </body>
 </html>
