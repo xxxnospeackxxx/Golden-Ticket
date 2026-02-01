@@ -8,8 +8,8 @@
 
 <style>
   :root{
-    --wheel-size: 360px;   /* 👈 roda maior */
-    --label-radius: 118px; /* 👈 posição dos ícones (centro de cada fatia) */
+    --wheel-size: 360px;
+    --label-radius: 118px;
   }
 
   body{
@@ -38,7 +38,7 @@
 
   h1{
     margin:6px 0 6px;
-    font-size:24px; /* 👈 título um pouco menor */
+    font-size:24px;
     letter-spacing:.2px;
   }
 
@@ -52,7 +52,7 @@
   }
 
   input{
-    width:min(260px, 80vw); /* 👈 caixa menor */
+    width:min(260px, 80vw);
     padding:10px 12px;
     border-radius:12px;
     font-size:15px;
@@ -68,7 +68,7 @@
     background:gold;
     font-weight:800;
     cursor:pointer;
-    min-width:120px; /* 👈 botão menor */
+    min-width:120px;
   }
   button:disabled{opacity:.6; cursor:not-allowed;}
 
@@ -80,7 +80,7 @@
     display:none;
   }
 
-  /* 🔽 ponteiro aponta para baixo */
+  /* 🔽 ponteiro */
   .pointer{
     position:absolute;
     top:-6px;
@@ -102,19 +102,20 @@
     border:10px solid rgba(255,255,255,.92);
     box-shadow:inset 0 0 0 6px rgba(0,0,0,.22),0 18px 45px rgba(0,0,0,.55);
     transform:rotate(0deg);
+    transition: transform 7s cubic-bezier(.12,.67,.12,.99);
 
-    /* 10 fatias intercaladas: perde / ganha */
+    /* 10 fatias intercaladas: perde/ganha/perde/ganha... */
     background:conic-gradient(
-      #c0392b 0deg 36deg,
-      #2ecc71 36deg 72deg,
-      #e74c3c 72deg 108deg,
-      #27ae60 108deg 144deg,
-      #c0392b 144deg 180deg,
-      #f1c40f 180deg 216deg,
-      #e74c3c 216deg 252deg,
-      #f39c12 252deg 288deg,
-      #c0392b 288deg 324deg,
-      #9b59b6 324deg 360deg
+      #c0392b 0deg 36deg,     /* 0 perde */
+      #2ecc71 36deg 72deg,    /* 1 ganha 10% */
+      #e74c3c 72deg 108deg,   /* 2 perde */
+      #27ae60 108deg 144deg,  /* 3 ganha 15% */
+      #c0392b 144deg 180deg,  /* 4 perde */
+      #f1c40f 180deg 216deg,  /* 5 ganha 20€ */
+      #e74c3c 216deg 252deg,  /* 6 perde */
+      #f39c12 252deg 288deg,  /* 7 ganha 50€ */
+      #c0392b 288deg 324deg,  /* 8 perde */
+      #9b59b6 324deg 360deg   /* 9 ganha cadeau */
     );
   }
 
@@ -125,7 +126,7 @@
     pointer-events:none;
   }
 
-  /* ✅ Ícones centrados no raio desejado */
+  /* ✅ ícones centrados */
   .slice-icon{
     position:absolute;
     left:50%;
@@ -135,7 +136,7 @@
       rotate(var(--a))
       translateY(calc(-1 * var(--label-radius)))
       rotate(calc(-1 * var(--a)));
-    font-size:28px;          /* 👈 ícones maiores */
+    font-size:28px;
     line-height:1;
     text-shadow:0 2px 8px rgba(0,0,0,.75);
     user-select:none;
@@ -155,7 +156,30 @@
     opacity:.85;
   }
 
-  /* Melhor em telas pequenas */
+  /* 🎉 CONFETTI */
+  .confetti{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:9999;
+  }
+  .confetti i{
+    position:absolute;
+    top:-20px;
+    width:10px;
+    height:16px;
+    opacity:.95;
+    border-radius:3px;
+    transform: translateY(-20px) rotate(0deg);
+    animation: fall var(--d) linear forwards;
+    left: var(--x);
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,.45));
+  }
+  @keyframes fall{
+    to { transform: translateY(110vh) rotate(720deg); }
+  }
+
   @media (max-width:420px){
     :root{ --wheel-size: 320px; --label-radius: 105px; }
     .slice-icon{ font-size:26px; }
@@ -176,7 +200,7 @@
     <div class="pointer"></div>
     <div id="wheel">
       <div class="labels">
-        <!-- Centros: 18,54,90,126,162,198,234,270,306,342 -->
+        <!-- centros: 18,54,90,126,162,198,234,270,306,342 -->
         <!-- PERDE -->
         <div class="slice-icon" style="--a:18deg;">😭</div>
         <div class="slice-icon" style="--a:90deg;">😢</div>
@@ -185,11 +209,11 @@
         <div class="slice-icon" style="--a:306deg;">🥲</div>
 
         <!-- GANHA -->
-        <div class="slice-icon" style="--a:54deg;">🎁</div>
-        <div class="slice-icon" style="--a:126deg;">🎁</div>
-        <div class="slice-icon" style="--a:198deg;">💶</div>
-        <div class="slice-icon" style="--a:270deg;">💶</div>
-        <div class="slice-icon" style="--a:342deg;">🛍️</div>
+        <div class="slice-icon" style="--a:54deg;">🏷️</div>   <!-- 10% -->
+        <div class="slice-icon" style="--a:126deg;">🏷️</div>  <!-- 15% -->
+        <div class="slice-icon" style="--a:198deg;">💶</div>   <!-- 20€ -->
+        <div class="slice-icon" style="--a:270deg;">💶</div>   <!-- 50€ -->
+        <div class="slice-icon" style="--a:342deg;">🛍️</div>   <!-- cadeau -->
       </div>
     </div>
   </div>
@@ -201,6 +225,7 @@
 </div>
 
 <script>
+  // 🔐 Supabase
   const SUPABASE_URL='https://nkuywnsjredskfnypice.supabase.co';
   const SUPABASE_KEY='sb_publishable_HQERWAaofXvB8m2mIV4DBQ_AR2J5nEc';
   const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -213,7 +238,7 @@
     "Pas gagnant cette fois ❌. La prochaine sera peut-être la bonne !"
   ];
 
-  // Fatias intercaladas
+  // Centros das fatias intercaladas
   const LOSE_SLICES=[18,90,162,234,306];
   const WIN_SLICES=[
     {angle:54,  text:"Vous avez gagné 10% 🎁"},
@@ -241,9 +266,31 @@
     return !!data;
   }
 
-  function rotationToLandOn(target){
-    const jitter=(Math.random()*20)-10; // mantém dentro da fatia
-    return 360-target+jitter;
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  // ✅ garante que para exatamente no centro escolhido
+  function rotationToLandOn(targetAngle){
+    const jitter = (Math.random()*12) - 6; // pequeno ajuste dentro da fatia
+    return (360 - targetAngle + jitter);
+  }
+
+  // 🎉 confetti quando ganha
+  function launchConfetti(){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    const colors = ['#ffd166','#06d6a0','#ef476f','#118ab2','#ffffff','#f77f00','#8338ec'];
+
+    for(let i=0;i<70;i++){
+      const p=document.createElement('i');
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      p.style.setProperty('--x', (Math.random()*100)+'vw');
+      p.style.setProperty('--d', (2.2 + Math.random()*1.2)+'s');
+      p.style.animationDelay = (Math.random()*0.4)+'s';
+      p.style.transform = `translateY(-20px) rotate(${Math.random()*180}deg)`;
+      c.appendChild(p);
+    }
+    document.body.appendChild(c);
+    setTimeout(()=> c.remove(), 3200);
   }
 
   startBtn.onclick=async()=>{
@@ -261,25 +308,28 @@
 
     wheelWrap.style.display='block';
 
-    const isWin=Math.random()>=0.5; // 50/50
-    let angle,finalText;
+    // 🎯 50/50
+    const isWin = Math.random() >= 0.5;
 
+    // ✅ escolhe fatia primeiro (assim visual e texto batem sempre)
+    let chosenAngle, finalText;
     if(isWin){
-      const s=WIN_SLICES[Math.floor(Math.random()*WIN_SLICES.length)];
-      angle=s.angle;
-      finalText=s.text;
+      const s = pick(WIN_SLICES);
+      chosenAngle = s.angle;
+      finalText = s.text;
     }else{
-      angle=LOSE_SLICES[Math.floor(Math.random()*LOSE_SLICES.length)];
-      finalText=loseMessages[Math.floor(Math.random()*loseMessages.length)];
+      chosenAngle = pick(LOSE_SLICES);
+      finalText = pick(loseMessages);
     }
 
-    const spins=8+Math.random()*2; // sensação 6–8s
-    const finalRotation=spins*360+rotationToLandOn(angle);
+    // ✅ VOLTAS INTEIRAS (isto corrige o bug definitivamente)
+    const fullSpins = 8 + Math.floor(Math.random()*3); // 8..10
+    const finalRotation = fullSpins*360 + rotationToLandOn(chosenAngle);
 
     // reset + animação
     wheel.style.transition='none';
     wheel.style.transform='rotate(0deg)';
-    wheel.offsetHeight;
+    wheel.offsetHeight; // força layout
     wheel.style.transition='transform 7s cubic-bezier(.12,.67,.12,.99)';
     wheel.style.transform=`rotate(${finalRotation}deg)`;
 
@@ -292,15 +342,18 @@
       spinSound.pause();
       spinSound.currentTime=0;
 
+      if(isWin) launchConfetti(); // 🎉
+
       resultEl.textContent=finalText;
 
       await supabaseClient.from('participacoes').insert({
-        token:token,
-        nickname:nick,
-        premio:finalText
+        token: token,
+        nickname: nick,
+        premio: finalText
       });
-    },7200);
+    }, 7200);
   };
 </script>
 </body>
 </html>
+
