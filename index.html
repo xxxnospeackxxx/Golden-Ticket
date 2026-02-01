@@ -24,10 +24,12 @@
 </div>
 
 <script>
+  // --- Supabase ---
   const SUPABASE_URL = 'https://nkuywnsjredskfnypice.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_HQERWAaofXvB8m2mIV4DBQ_AR2J5nEc';
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // --- Prémios ---
   const prizes = [
     'Vous avez gagné 10% 🎁',
     'Vous avez gagné 15% 🎁',
@@ -36,6 +38,7 @@
     'Vous avez gagné un cadeau de la boutique 🛍️'
   ];
 
+  // --- Ler token da URL ---
   const token = new URLSearchParams(window.location.search).get('token');
 
   if (!token) {
@@ -45,9 +48,10 @@
     alert("Token détecté: " + token);
   }
 
+  // --- Função para verificar se token já foi usado ---
   async function tokenUsed() {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('participacoes')
         .select('id')
         .eq('token', token)
@@ -60,6 +64,7 @@
     }
   }
 
+  // --- Botão Participer ---
   document.getElementById('start').onclick = async () => {
     const nick = document.getElementById('nickname').value.trim();
     alert("Pseudo entré: " + nick);
@@ -73,12 +78,13 @@
     document.getElementById('scratch').style.display = 'block';
   };
 
+  // --- Área de raspar ---
   document.getElementById('scratch').onclick = async () => {
     const prize = prizes[Math.floor(Math.random() * prizes.length)];
     alert("Vous avez gagné: " + prize);
 
     try {
-      const { error } = await supabase.from('participacoes').insert({
+      const { error } = await supabaseClient.from('participacoes').insert({
         token: token,
         nickname: document.getElementById('nickname').value,
         premio: prize
