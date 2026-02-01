@@ -7,13 +7,12 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
   <style>
-    :root { --card: rgba(0,0,0,.72); }
-
     body{
       margin:0;
       font-family: Arial, sans-serif;
       background: url("assets/background.jpg") no-repeat center center fixed;
-      background-size: cover;
+      background-size: contain;     /* 👈 imagem inteira */
+      background-color:#000;        /* fundo preto */
       color:#fff;
       min-height:100vh;
       display:flex;
@@ -24,8 +23,7 @@
 
     .card{
       width: min(420px, 92vw);
-      background: var(--card);
-      backdrop-filter: blur(6px);
+      background: rgba(0,0,0,.75);
       border-radius: 22px;
       padding: 20px;
       box-shadow: 0 20px 60px rgba(0,0,0,.55);
@@ -33,7 +31,7 @@
     }
 
     h1{ margin:6px 0 8px; font-size: 26px; }
-    p{ margin:0 0 10px; opacity:.95; }
+    p{ margin:0 0 10px; }
 
     input, button{
       width:100%;
@@ -44,19 +42,20 @@
       border: none;
       outline: none;
     }
-    input{ background: rgba(255,255,255,.92); }
+
+    input{ background:#fff; }
     button{
       background: gold;
       color:#111;
       font-weight: 800;
       cursor:pointer;
     }
-    button:disabled{ opacity:.55; cursor:not-allowed; }
+    button:disabled{ opacity:.6; cursor:not-allowed; }
 
     .wheel-wrap{
       margin: 18px auto 6px;
-      width: 280px;
-      height: 280px;
+      width: 260px;
+      height: 260px;
       position: relative;
       display:none;
     }
@@ -70,7 +69,6 @@
       border-left:14px solid transparent;
       border-right:14px solid transparent;
       border-bottom:26px solid gold;
-      filter: drop-shadow(0 6px 8px rgba(0,0,0,.6));
       z-index:5;
     }
 
@@ -78,12 +76,10 @@
       width:100%;
       height:100%;
       border-radius:50%;
-      border: 10px solid rgba(255,255,255,.85);
+      border: 10px solid #fff;
       box-shadow: inset 0 0 0 6px rgba(0,0,0,.25), 0 18px 45px rgba(0,0,0,.55);
       transform: rotate(0deg);
-      transition: transform 7s cubic-bezier(.12,.67,.12,.99);
       background: conic-gradient(
-        /* 10 fatias (36° cada) -> 5 perde + 5 ganha */
         #c0392b 0deg 36deg,
         #e74c3c 36deg 72deg,
         #c0392b 72deg 108deg,
@@ -98,24 +94,11 @@
       );
     }
 
-    .legend{
-      margin-top: 8px;
-      font-size: 12px;
-      opacity: .9;
-      line-height: 1.35;
-    }
-
     #result{
       margin-top: 14px;
       font-size: 18px;
       font-weight: 800;
       min-height: 28px;
-    }
-
-    .small{
-      margin-top: 8px;
-      font-size: 12px;
-      opacity: .85;
     }
   </style>
 </head>
@@ -125,7 +108,7 @@
     <h1>🎡 Golden Ticket</h1>
     <p>Identifiez-vous avec votre pseudo Telegram</p>
 
-    <input id="nickname" placeholder="@pseudoTelegram" autocomplete="off" />
+    <input id="nickname" placeholder="@pseudoTelegram" />
     <button id="start">Participer</button>
 
     <div id="wheelWrap" class="wheel-wrap">
@@ -134,21 +117,16 @@
     </div>
 
     <div id="result"></div>
-    <div class="legend">
-      <span>🔴 = Perdu</span> &nbsp;•&nbsp; <span>🟢/🟡/🟣 = Gain</span>
-    </div>
-    <div class="small">Une participation par lien (ticket).</div>
 
     <audio id="spinSound" src="assets/spin.mp3" preload="auto"></audio>
   </div>
 
 <script>
-  // ✅ Supabase
+  // 🔐 Supabase
   const SUPABASE_URL = 'https://nkuywnsjredskfnypice.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_HQERWAaofXvB8m2mIV4DBQ_AR2J5nEc';
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ✅ 5 prémios
   const prizes = [
     "Vous avez gagné 10% 🎁",
     "Vous avez gagné 15% 🎁",
@@ -157,7 +135,6 @@
     "Vous avez gagné un cadeau de la boutique 🛍️"
   ];
 
-  // ✅ mensagens de perda (FR)
   const loseMessages = [
     "Perdu 😢… tente ta chance une prochaine fois !",
     "Pas de chance cette fois 😔. Reviens tenter ta chance bientôt !",
@@ -167,7 +144,7 @@
   ];
 
   const token = new URLSearchParams(window.location.search).get('token');
-  if (!token) document.body.innerHTML = "<h2 style='color:white;font-family:Arial'>Lien invalide ❌</h2>";
+  if (!token) document.body.innerHTML = "<h2 style='color:white'>Lien invalide ❌</h2>";
 
   const startBtn = document.getElementById('start');
   const wheelWrap = document.getElementById('wheelWrap');
@@ -175,38 +152,20 @@
   const resultEl = document.getElementById('result');
   const spinSound = document.getElementById('spinSound');
 
-  async function tokenUsed() {
-    const { data, error } = await supabaseClient
+  async function tokenUsed(){
+    const { data } = await supabaseClient
       .from('participacoes')
       .select('id')
       .eq('token', token)
       .maybeSingle();
-    if (error) return true; // se der erro, bloqueia
     return !!data;
   }
 
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-  function playSpinSound(){
-    try {
-      spinSound.currentTime = 0;
-      spinSound.loop = true;
-      // Alguns browsers bloqueiam autoplay; aqui já é clique do user, então deve tocar.
-      spinSound.play().catch(()=>{});
-    } catch(e) {}
-  }
-
-  function stopSpinSound(){
-    try {
-      spinSound.loop = false;
-      spinSound.pause();
-      spinSound.currentTime = 0;
-    } catch(e) {}
-  }
-
   startBtn.onclick = async () => {
     const nick = document.getElementById('nickname').value.trim();
-    if (!nick.startsWith('@')) { alert("Pseudo Telegram invalide"); return; }
+    if (!nick.startsWith('@')) return alert("Pseudo Telegram invalide");
 
     startBtn.disabled = true;
     resultEl.textContent = "";
@@ -219,44 +178,40 @@
 
     wheelWrap.style.display = 'block';
 
-    // 🎯 Decisão 50/50 ANTES de rodar
-    const rnd = Math.floor(Math.random() * 100); // 0..99
-    const isWin = rnd >= 50;
-
+    const isWin = Math.random() >= 0.5;
     const finalText = isWin ? pick(prizes) : pick(loseMessages);
 
-    // 🎡 Ângulo de parada: topo = 0deg (ponteiro fixa em cima)
-    // Metade vermelha (0..180) = perda ; metade (180..360) = ganho
     const stopAngle = isWin
-      ? 180 + Math.floor(Math.random() * 180)  // ganha
-      : Math.floor(Math.random() * 180);       // perde
+      ? 180 + Math.floor(Math.random() * 180)
+      : Math.floor(Math.random() * 180);
 
-    // ⏱️ 6 a 8 segundos (número de voltas)
-    const spins = 9 + Math.random() * 2; // mais voltas dá sensação de 6–8s com transição 7s
+    const spins = 8 + Math.random() * 2;
     const finalRotation = spins * 360 + stopAngle;
 
-    playSpinSound();
+    /* 🔄 RESET + ANIMAÇÃO (correção principal) */
+    wheel.style.transition = 'none';
+    wheel.style.transform = 'rotate(0deg)';
+    wheel.offsetHeight;
+
+    wheel.style.transition = 'transform 7s cubic-bezier(.12,.67,.12,.99)';
     wheel.style.transform = `rotate(${finalRotation}deg)`;
 
-    // quando terminar (7s) mostra resultado e grava no Supabase
+    spinSound.currentTime = 0;
+    spinSound.loop = true;
+    spinSound.play().catch(()=>{});
+
     setTimeout(async () => {
-      stopSpinSound();
+      spinSound.pause();
+      spinSound.currentTime = 0;
+
       resultEl.textContent = finalText;
 
-      // grava sempre (ganhe ou perca)
-      const { error } = await supabaseClient.from('participacoes').insert({
+      await supabaseClient.from('participacoes').insert({
         token: token,
         nickname: nick,
         premio: finalText
       });
-
-      // se der erro, avisa (mas não quebra)
-      if (error) {
-        console.log("Supabase insert error:", error);
-        // opcional: alert("Erreur d'enregistrement, veuillez contacter l'administrateur.");
-      }
-    }, 7200); // ligeiramente > 7s
-
+    }, 7200);
   };
 </script>
 </body>
