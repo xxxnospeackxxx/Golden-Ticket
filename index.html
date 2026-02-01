@@ -2,52 +2,100 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Golden Ticket - Carte à gratter</title>
+  <title>Golden Ticket</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: Arial; background:#f5f5f5; display:flex; justify-content:center; align-items:center; height:100vh; }
-    .card { background:#fff; padding:24px; border-radius:16px; width:360px; box-shadow:0 10px 30px rgba(0,0,0,.1); text-align:center; }
-    input, button { width:100%; padding:12px; margin-top:12px; border-radius:10px; font-size:16px; }
-    button { background:#4f46e5; color:#fff; border:none; cursor:pointer; }
-    .scratch { margin-top:20px; padding:30px; background:#ddd; border-radius:12px; cursor:pointer; font-weight:bold; font-size:18px; display:none; }
-    .result { font-size:20px; margin-top:20px; font-weight:bold; color:#111; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #1f1f1f;
+      padding: 24px;
+      border-radius: 16px;
+      width: 360px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      border: none;
+    }
+    button {
+      background: gold;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .scratch {
+      margin-top: 20px;
+      padding: 30px;
+      background: #333;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 18px;
+      display: none;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
+
 <div class="card">
-  <h2>Carte à gratter 🎉</h2>
-  <p>Identifiez-vous avec votre pseudo Telegram</p>
-  <input id="nickname" placeholder="@pseudoTelegram" />
+  <h2>🎟️ Golden Ticket</h2>
+  <p>Entrez votre pseudo Telegram</p>
+  <input id="nickname" placeholder="@pseudoTelegram">
   <button id="start">Participer</button>
-  <div id="scratch" class="scratch">Grattez ici 👆</div>
+
+  <div id="scratch" class="scratch">🎉 Grattez ici 🎉</div>
   <div id="result" class="result"></div>
 </div>
 
 <script>
-  // --- Supabase ---
+  // 🔐 Supabase
   const SUPABASE_URL = 'https://nkuywnsjredskfnypice.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_HQERWAaofXvB8m2mIV4DBQ_AR2J5nEc';
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // --- Prémios ---
+  // 🏆 Prémios
   const prizes = [
-    'Vous avez gagné 10% 🎁',
-    'Vous avez gagné 15% 🎁',
-    'Vous avez gagné 50€ 💶',
-    'Vous avez gagné 20€ 💶',
-    'Vous avez gagné un cadeau de la boutique 🛍️'
+    "Vous avez gagné 10% 🎁",
+    "Vous avez gagné 15% 🎁",
+    "Vous avez gagné 50€ 💶",
+    "Vous avez gagné 20€ 💶",
+    "Vous avez gagné un cadeau de la boutique 🛍️"
   ];
 
-  // --- Ler token da URL ---
-  const token = new URLSearchParams(window.location.search).get('token');
+  // ❌ Messages de perte
+  const loseMessages = [
+    "Perdu 😢… tente ta chance une prochaine fois !",
+    "Pas de chance cette fois 😔. Reviens tenter ta chance bientôt !",
+    "Perdu… 🍀 La chance tourne, réessaie plus tard !",
+    "Dommage ! 😕 Achète encore et tente ta chance à nouveau !",
+    "Pas gagnant cette fois ❌. La prochaine sera peut-être la bonne !"
+  ];
 
+  // 🔑 Token unique
+  const token = new URLSearchParams(window.location.search).get('token');
   if (!token) {
-    document.body.innerHTML = '<h2>Lien invalide ❌</h2>';
+    document.body.innerHTML = "<h2>Lien invalide ❌</h2>";
   }
 
-  // --- Verificar se token já foi usado ---
   async function tokenUsed() {
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from('participacoes')
       .select('id')
       .eq('token', token)
@@ -55,30 +103,45 @@
     return data;
   }
 
-  // --- Botão Participer ---
+  // ▶️ Participer
   document.getElementById('start').onclick = async () => {
     const nick = document.getElementById('nickname').value.trim();
-    if (!nick.startsWith('@')) { alert('Pseudo Telegram invalide'); return; }
+    if (!nick.startsWith('@')) {
+      alert("Pseudo Telegram invalide");
+      return;
+    }
 
-    const used = await tokenUsed();
-    if (used) { alert('Ce lien a déjà été utilisé ❌'); return; }
+    if (await tokenUsed()) {
+      alert("Ce lien a déjà été utilisé ❌");
+      return;
+    }
 
     document.getElementById('scratch').style.display = 'block';
   };
 
-  // --- Área de raspar ---
+  // 🎯 LOGIQUE 50/50
   document.getElementById('scratch').onclick = async () => {
-    const prize = prizes[Math.floor(Math.random() * prizes.length)];
+    const random = Math.floor(Math.random() * 100); // 0–99
+    let resultText = "";
+
+    if (random < 50) {
+      // ❌ PERDE
+      resultText = loseMessages[Math.floor(Math.random() * loseMessages.length)];
+    } else {
+      // ✅ GANHA
+      resultText = prizes[Math.floor(Math.random() * prizes.length)];
+    }
 
     await supabaseClient.from('participacoes').insert({
       token: token,
       nickname: document.getElementById('nickname').value,
-      premio: prize
+      premio: resultText
     });
 
-    document.getElementById('result').innerText = prize;
+    document.getElementById('result').innerText = resultText;
     document.getElementById('scratch').style.display = 'none';
   };
 </script>
+
 </body>
 </html>
